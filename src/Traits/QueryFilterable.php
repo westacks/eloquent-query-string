@@ -3,6 +3,7 @@
 namespace WeStacks\EloquentQueryString\Traits;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -81,6 +82,10 @@ trait QueryFilterable
         $getter = empty($getter) ? 'get' : $getter[0];
         $args =  explode(',', Request::query($getter, '*'));
         $query = $this->applyFilter($query, $getter, $args);
+
+        if ($query instanceof Paginator) {
+            $query->appends(Request::query());
+        }
 
         foreach ($this->queryPostLoad as $method) {
             $args = Request::query($method);
