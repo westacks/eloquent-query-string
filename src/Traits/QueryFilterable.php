@@ -71,21 +71,26 @@ trait QueryFilterable
     public function scopeFromQueryString(Builder $query)
     {
         foreach ($this->queryFilters as $filter) {
-            $query = $this->applyFilter($query, $filter, Request::query($filter));
+            $args = Request::query($filter);
+            $args = empty($args) ? [] : [$args];
+            $query = $this->applyFilter($query, $filter, $args);
         }
 
         $getter = array_intersect(array_keys(Request::query()), $this->queryGetters);
         $getter = empty($getter) ? 'get' : $getter[0];
-        $query = $this->applyFilter($query, $getter, Request::query($getter, ['*']));
+        $args =  explode(',', Request::query($getter, '*'));
+        $query = $this->applyFilter($query, $getter, $args);
 
         foreach ($this->queryPostLoad as $method) {
-            $query = $this->applyFilter($query, $method, Request::query($method));
+            $args = Request::query($method);
+            $args = empty($args) ? [] : [$args];
+            $query = $this->applyFilter($query, $method, $args);
         }
 
         return $query;
     }
 
-    private function applyFilter(&$query, string $method, array $args)
+    private function applyFilter(&$query, string $method, ?array $args)
     {
         if (!$args || !$this->canBeFilteredByQuery($method, $args, Auth::user())) return $query;
 
