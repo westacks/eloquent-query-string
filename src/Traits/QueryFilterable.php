@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
 use Throwable;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 trait QueryFilterable
 {
@@ -73,10 +74,10 @@ trait QueryFilterable
         foreach ($this->queryFilters as $filter) {
             $args = Request::query($filter);
             $args = empty($args) ? [] : [$args];
-            $query = $this->applyFilter($query, $filter, $args);
+            $this->applyFilter($query, $filter, $args);
         }
 
-        $getter = array_intersect(array_keys(Request::query()), $this->queryGetters);
+        $getter = array_values(array_intersect(array_keys(Request::query()), $this->queryGetters));
         $getter = empty($getter) ? 'get' : $getter[0];
         $args =  explode(',', Request::query($getter, '*'));
         $query = $this->applyFilter($query, $getter, $args);
@@ -84,7 +85,7 @@ trait QueryFilterable
         foreach ($this->queryPostLoad as $method) {
             $args = Request::query($method);
             $args = empty($args) ? [] : [$args];
-            $query = $this->applyFilter($query, $method, $args);
+            $this->applyFilter($query, $method, $args);
         }
 
         return $query;
